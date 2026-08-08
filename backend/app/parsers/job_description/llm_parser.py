@@ -1,4 +1,5 @@
 import json
+
 from groq import Groq
 
 from app.core.config import settings

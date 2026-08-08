@@ -1,9 +1,14 @@
-from fastapi import FastAPI
+import time
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1 import api_v1_router
 from app.core.config import settings
-from fastapi.middleware.cors import CORSMiddleware
+from app.core.context import correlation_id_ctx
+from app.core.logging import logger
 from app.exceptions.handlers import register_exception_handlers
+from app.services.analysis_service import generate_correlation_id
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -17,11 +22,28 @@ app = FastAPI(
 # Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def correlation_and_logging_middleware(request: Request, call_next):
+    cid = request.headers.get("X-Correlation-ID") or generate_correlation_id()
+    correlation_id_ctx.set(cid)
+
+    start_time = time.time()
+    response = await call_next(request)
+    duration_ms = int((time.time() - start_time) * 1000)
+
+    response.headers["X-Correlation-ID"] = cid
+    logger.info(
+        f"[{cid}] {request.method} {request.url.path} - Status: {response.status_code} ({duration_ms}ms)"
+    )
+    return response
+
 
 # Register central exception handlers
 register_exception_handlers(app)

@@ -2,9 +2,9 @@ import asyncio
 import time
 import uuid
 from concurrent.futures import ProcessPoolExecutor
-from contextvars import ContextVar
 from datetime import datetime, timezone
 
+from app.core.context import correlation_id_ctx
 from app.core.logging import logger
 from app.exceptions.custom_exceptions import ParsingException, ResumeAnalyzerException
 from app.matching.engine import evaluate_match
@@ -12,10 +12,6 @@ from app.matching.policies import DEFAULT_POLICY
 from app.parsers.job_description.pipeline import process_job_description
 from app.parsers.resume.pipeline import process_resume
 from app.schemas.analysis import AnalysisFeedback, AnalysisMetadata, AnalysisResponse
-
-
-# Context variable to hold the Correlation ID for the current async task
-correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id", default="UNKNOWN")
 
 # A dedicated ProcessPool for CPU-intensive document parsing.
 # We limit workers to avoid memory exhaustion from concurrent pdfplumber instances.
@@ -100,13 +96,13 @@ async def execute_analysis_workflow(
 
     logger.info(f"[{analysis_id}] Initiating Analysis Workflow")
 
-    # 1. Concurrent Parsing (Timeout: 10 seconds)
+    # 1. Concurrent Parsing (Timeout: 25 seconds)
     try:
         resume_task = run_pipeline_with_timeout(
-            process_resume, 10, resume_bytes, resume_filename
+            process_resume, 25, resume_bytes, resume_filename
         )
         jd_task = run_pipeline_with_timeout(
-            process_job_description, 10, jd_bytes, jd_filename
+            process_job_description, 25, jd_bytes, jd_filename
         )
 
         # return_exceptions=False means if one fails, gather throws immediately.

@@ -1,4 +1,5 @@
 import pytest
+
 from app.exceptions.custom_exceptions import NotAJobDescriptionException
 from app.parsers.job_description.detector import is_valid_jd
 from app.parsers.job_description.extractor import extract_text_from_txt

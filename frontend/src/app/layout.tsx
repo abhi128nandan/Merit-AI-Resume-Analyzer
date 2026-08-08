@@ -13,8 +13,8 @@ const fontMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Merit | AI Resume Analyzer",
-  description: "Enterprise-grade AI for personal professional growth.",
+  title: "Merit AI — Deterministic ATS Candidate Matching Engine",
+  description: "Engineering-first candidate-job matching engine built on strict text extraction, deterministic policy weights, and verbatim quote verification.",
 };
 
 export default function RootLayout({
@@ -25,9 +25,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fontSans.variable} ${fontMono.variable} h-full antialiased`}
+      className={`${fontSans.variable} ${fontMono.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground">
+        <a
+          href="#main-content"
+          className="sr-only-focusable z-50 p-3 bg-emerald-600 text-white font-mono text-xs focus:not-sr-only focus:fixed focus:top-4 focus:left-4 rounded-md shadow-lg"
+        >
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>

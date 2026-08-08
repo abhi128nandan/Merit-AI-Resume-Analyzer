@@ -6,64 +6,64 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #09090b;
   
-  --card: #fafafa;
-  --card-foreground: #171717;
+  --card: #fcfcfc;
+  --card-foreground: #09090b;
 
   --popover: #ffffff;
-  --popover-foreground: #171717;
+  --popover-foreground: #09090b;
 
-  --primary: #4F46E5;
-  --primary-foreground: #ffffff;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
 
   --secondary: #f4f4f5;
-  --secondary-foreground: #171717;
+  --secondary-foreground: #18181b;
 
   --muted: #f4f4f5;
-  --muted-foreground: #737373;
+  --muted-foreground: #52525b;
 
   --accent: #f4f4f5;
-  --accent-foreground: #171717;
+  --accent-foreground: #09090b;
 
-  --destructive: #e11d48;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
 
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #4F46E5;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #18181b;
 
   --radius: 0.5rem;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
+  --background: #09090b;
+  --foreground: #f4f4f5;
   
-  --card: #121212;
-  --card-foreground: #fafafa;
+  --card: #121215;
+  --card-foreground: #f4f4f5;
 
-  --popover: #121212;
-  --popover-foreground: #fafafa;
+  --popover: #121215;
+  --popover-foreground: #f4f4f5;
 
-  --primary: #fafafa;
+  --primary: #f4f4f5;
   --primary-foreground: #09090b;
 
   --secondary: #27272a;
-  --secondary-foreground: #fafafa;
+  --secondary-foreground: #f4f4f5;
 
-  --muted: #27272a;
+  --muted: #1e1e24;
   --muted-foreground: #a1a1aa;
 
   --accent: #27272a;
-  --accent-foreground: #fafafa;
+  --accent-foreground: #f4f4f5;
 
   --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
+  --destructive-foreground: #f4f4f5;
 
   --border: #27272a;
   --input: #27272a;
-  --ring: #d4d4d8;
+  --ring: #a1a1aa;
 }
 
 @theme inline {
@@ -100,6 +100,24 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground selection:bg-emerald-500/20 selection:text-emerald-500;
   }
+}
+
+/* Accessibility Focus States & Custom Scrollbar */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* Screen reader only utility */
+.sr-only-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }

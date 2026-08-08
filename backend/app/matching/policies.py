@@ -6,9 +6,15 @@ class MatchingPolicy(BaseModel):
 
     # Category Weights (Must sum to 1.0 or 100)
     skills_weight: float = Field(default=0.40, description="Weight for skills matching")
-    experience_weight: float = Field(default=0.30, description="Weight for experience matching")
-    education_weight: float = Field(default=0.15, description="Weight for education matching")
-    title_weight: float = Field(default=0.15, description="Weight for job title matching")
+    experience_weight: float = Field(
+        default=0.30, description="Weight for experience matching"
+    )
+    education_weight: float = Field(
+        default=0.15, description="Weight for education matching"
+    )
+    title_weight: float = Field(
+        default=0.15, description="Weight for job title matching"
+    )
 
     # Sub-weights for Skills
     required_skills_weight: float = Field(
@@ -20,10 +26,16 @@ class MatchingPolicy(BaseModel):
 
     # Match Level scoring multipliers
     score_exact: float = Field(default=1.0, description="Multiplier for Exact match")
-    score_semantic: float = Field(default=0.9, description="Multiplier for Semantic match")
-    score_partial: float = Field(default=0.5, description="Multiplier for Partial match")
+    score_semantic: float = Field(
+        default=0.9, description="Multiplier for Semantic match"
+    )
+    score_partial: float = Field(
+        default=0.5, description="Multiplier for Partial match"
+    )
     score_weak: float = Field(default=0.2, description="Multiplier for Weak match")
-    score_missing: float = Field(default=0.0, description="Multiplier for Missing match")
+    score_missing: float = Field(
+        default=0.0, description="Multiplier for Missing match"
+    )
     score_hallucinated: float = Field(
         default=0.0, description="Multiplier for Hallucinated match"
     )

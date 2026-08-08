@@ -1,7 +1,6 @@
 import re
 from typing import Sequence
 
-
 from app.schemas.parsed_resume import (
     LLMExtractedResume,
     VerifiedContact,

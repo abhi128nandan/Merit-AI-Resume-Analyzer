@@ -44,7 +44,8 @@ def is_valid_jd(text: str) -> bool:
 
     # 2. Experience indicators
     if re.search(
-        r"\b\d+\+?\s*(?:-\s*\d+\s*)?years?(?:\s+of)?\s+experience\b", text_lower
+        r"\b\d+\+?\s*(?:-\s*\d+\s*)?years?(?:\s+[\w-]+){0,3}\s+experience\b",
+        text_lower,
     ):
         score += 2
 

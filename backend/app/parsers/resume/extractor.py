@@ -1,6 +1,5 @@
 import io
 
-
 import pdfplumber
 import pypdfium2 as pdfium
 from docx import Document
@@ -102,7 +101,7 @@ def extract_text(file_content: bytes, extension: str) -> str:
 
     Args:
         file_content: The binary content of the file.
-        extension: The file extension (e.g., '.pdf', '.docx').
+        extension: The file extension (e.g., '.pdf', '.docx', '.txt').
 
     Returns:
         Extracted text as a string.
@@ -111,5 +110,7 @@ def extract_text(file_content: bytes, extension: str) -> str:
         return extract_text_from_pdf(file_content)
     elif extension.lower() in [".docx", ".doc"]:
         return extract_text_from_docx(file_content)
+    elif extension.lower() == ".txt":
+        return file_content.decode("utf-8", errors="ignore").strip()
     else:
         raise ParsingException(f"Unsupported extension for extraction: {extension}")

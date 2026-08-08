@@ -9,16 +9,16 @@ export interface AnalysisMetadata {
 }
 
 export interface VerificationState {
-  value: any;
+  value: string | number | null;
   verification_state: string;
 }
 
 export interface VerifiedParsedResume {
-  contact: any;
+  contact: Record<string, VerificationState | null>;
   summary?: VerificationState;
-  skills: any[];
-  experience: any[];
-  education: any[];
+  skills: VerificationState[];
+  experience: Record<string, unknown>[];
+  education: Record<string, unknown>[];
   overall_confidence: number;
   section_confidence: Record<string, number>;
 }
@@ -28,10 +28,10 @@ export interface VerifiedJD {
   company: VerificationState;
   location: VerificationState;
   employment_type: VerificationState;
-  required_skills: any[];
-  preferred_skills: any[];
-  responsibilities: any[];
-  qualifications: any[];
+  required_skills: VerificationState[];
+  preferred_skills: VerificationState[];
+  responsibilities: VerificationState[];
+  qualifications: VerificationState[];
   experience_requirements: VerificationState;
   education_requirements: VerificationState;
   overall_confidence: number;
@@ -75,7 +75,7 @@ export interface AnalysisResponse {
 }
 
 export class ApiError extends Error {
-  constructor(public statusCode: number, public message: string, public details?: any) {
+  constructor(public status: number, public message: string, public details?: unknown) {
     super(message);
     this.name = "ApiError";
   }
@@ -111,14 +111,16 @@ export async function analyzeMatch(resumeFile: File, jdText: string): Promise<An
         } else if (errorData.detail) {
           // Fallback for standard FastAPI validation errors
           if (Array.isArray(errorData.detail)) {
-             errorMessage = "Validation Error: " + errorData.detail.map((d: any) => d.msg).join(", ");
+             errorMessage = "Validation Error: " + errorData.detail.map((d: { msg?: string }) => d.msg || "").join(", ");
           } else {
-             errorMessage = errorData.detail;
+             errorMessage = String(errorData.detail);
           }
         }
-      } catch (e) {
-         if (response.status === 413) errorMessage = "File is too large.";
-         if (response.status === 504) errorMessage = "Analysis timed out. The document might be too complex.";
+      } catch {
+         if (response.status === 413) errorMessage = "The uploaded file exceeds the 5 MB limit.";
+         if (response.status === 422) errorMessage = "This file is not a valid resume or document structure.";
+         if (response.status === 504) errorMessage = "The analysis timed out.";
+         if (response.status === 500) errorMessage = "Internal processing failed. Please try again.";
       }
 
       throw new ApiError(response.status, errorMessage, errorDetails);
