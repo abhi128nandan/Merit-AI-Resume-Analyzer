@@ -31,7 +31,10 @@ app.add_middleware(
 
 @app.middleware("http")
 async def correlation_and_logging_middleware(request: Request, call_next):
-    cid = request.headers.get("X-Correlation-ID") or generate_correlation_id()
+    # Support both trace-id style Request-ID and custom Correlation-ID
+    request_id = request.headers.get("X-Request-ID") or generate_correlation_id()
+    cid = request.headers.get("X-Correlation-ID") or request_id
+    
     correlation_id_ctx.set(cid)
 
     start_time = time.time()
@@ -39,8 +42,10 @@ async def correlation_and_logging_middleware(request: Request, call_next):
     duration_ms = int((time.time() - start_time) * 1000)
 
     response.headers["X-Correlation-ID"] = cid
+    response.headers["X-Request-ID"] = request_id
+    
     logger.info(
-        f"[{cid}] {request.method} {request.url.path} - Status: {response.status_code} ({duration_ms}ms)"
+        f"[{cid}] {request.method} {request.url.path} - Status: {response.status_code} - Execution Time: {duration_ms}ms"
     )
     return response
 
@@ -64,3 +69,17 @@ def read_root():
 @app.get("/health", tags=["Health"])
 def health_check():
     return {"status": "healthy"}
+
+
+@app.get("/health/live", tags=["Health"])
+def health_live():
+    """Liveness probe - indicates if the application is running."""
+    return {"status": "alive"}
+
+
+@app.get("/health/ready", tags=["Health"])
+def health_ready():
+    """Readiness probe - indicates if the application is ready to accept traffic."""
+    # In a full setup, this would ping the DB: `await db.execute("SELECT 1")`
+    return {"status": "ready"}
+

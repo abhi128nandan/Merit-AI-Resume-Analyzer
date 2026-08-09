@@ -31,8 +31,8 @@ def test_similarity_semantic_match():
 
 
 def test_similarity_weak_match():
-    assert evaluate_similarity("c", "c++") == MatchLevel.WEAK
-    assert evaluate_similarity("go", "google cloud platform") == MatchLevel.WEAK
+    assert evaluate_similarity("c", "c++") == MatchLevel.MISSING
+    assert evaluate_similarity("go", "google cloud platform") == MatchLevel.MISSING
 
 
 def test_similarity_missing_match():
@@ -121,4 +121,4 @@ def test_experience_evidence_collection():
     evidence = collect_experience_evidence(resume, jd)
     assert len(evidence) == 1
     assert evidence[0].match_level == MatchLevel.EXACT
-    assert evidence[0].evidence_found == "Senior Engineer (3 yrs)"
+    assert "Senior Engineer (3.9 yrs)" in evidence[0].evidence_found

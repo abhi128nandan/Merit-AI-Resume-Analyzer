@@ -1,0 +1,47 @@
+{
+  "database": {
+    "aliases": ["databases", "rdbms", "dbms", "nosql"],
+    "technologies": ["postgresql", "mysql", "oracle", "mongodb", "redis", "cassandra"],
+    "coursework": ["database systems", "dbms", "database management"]
+  },
+  "web service": {
+    "aliases": ["web services", "rest apis", "rest api", "http services", "web api", "graphql"],
+    "technologies": ["spring boot", "express.js", "django", "flask", "fastapi"],
+    "coursework": ["web development", "service oriented architecture"]
+  },
+  "data structure": {
+    "aliases": ["data structures", "dsa"],
+    "technologies": [],
+    "coursework": ["data structures algorithms", "dsa coursework", "algorithms", "data structures"]
+  },
+  "object oriented programming": {
+    "aliases": ["oop", "objectoriented programming", "object oriented design"],
+    "technologies": [],
+    "coursework": ["oop coursework", "object oriented programming"]
+  },
+  "backend development": {
+    "aliases": ["backend", "back end", "server side"],
+    "technologies": ["spring boot", "express.js", "django", "node.js"],
+    "coursework": ["backend engineering"]
+  },
+  "cloud technology": {
+    "aliases": ["cloud", "cloud technologies", "cloud computing"],
+    "technologies": ["aws", "gcp", "azure", "amazon web services", "google cloud"],
+    "coursework": ["cloud computing"]
+  },
+  "version control": {
+    "aliases": ["version control system", "vcs"],
+    "technologies": ["git", "svn", "mercurial", "github", "gitlab"],
+    "coursework": []
+  },
+  "system design": {
+    "aliases": ["systems design", "scalable software architecture"],
+    "technologies": [],
+    "coursework": ["system design", "software architecture"]
+  },
+  "software development fundamental": {
+    "aliases": ["software engineering", "software development fundamentals"],
+    "technologies": [],
+    "coursework": ["software engineering"]
+  }
+}

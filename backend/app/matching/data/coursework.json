@@ -1,0 +1,8 @@
+{
+  "data structures & algorithms": ["data structures", "algorithms", "dsa"],
+  "dbms": ["database", "databases", "database management systems"],
+  "operating systems": ["operating systems", "os"],
+  "computer networks": ["computer networks", "networking"],
+  "oop": ["object oriented programming", "oop"],
+  "software engineering": ["software engineering"]
+}
