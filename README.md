@@ -11,7 +11,7 @@
 
 **Production-grade, full-stack ATS intelligence platform engineered with FastAPI Clean Architecture and Next.js 16.**
 
-Merit AI performs deep semantic analysis of resumes against target job descriptions, providing deterministic ATS scoring, verbatim evidence isolation, and hallucination-free career insights.
+Merit AI performs deep structural analysis of resumes against target job descriptions, providing deterministic ATS scoring, verbatim evidence isolation, and evidence-grounded verification.
 
 ---
 
@@ -26,7 +26,7 @@ Merit AI performs deep semantic analysis of resumes against target job descripti
 ## 🎯 Why Merit?
 
 - **The Problem**: Traditional Applicant Tracking Systems (ATS) use simplistic keyword matching that fails candidates who describe identical experience using different terminology. Conversely, naive LLM implementations suffer from hallucinations—inventing skills candidates never claimed.
-- **The Solution**: Merit AI introduces a hybrid engine combining exact text extraction, semantic similarity scoring, deterministic weighted policies, and a **Dual-Pass Hallucination Guard** that verifies every insight against verbatim raw document quotes.
+- **The Solution**: Merit AI introduces an engine combining exact text extraction, lexical verification, deterministic weighted policies, and a **Dual-Pass Verification Guard** that validates every insight against verbatim raw document quotes.
 - **Why This Project Exists**: Built to demonstrate enterprise-level software engineering—Clean Architecture, CPU thread pool offloading, strict input sanitization, automated Red Team testing, and production-grade UI design.
 
 ---
@@ -36,7 +36,7 @@ Merit AI performs deep semantic analysis of resumes against target job descripti
 - **📄 Concurrent Document Parsing**: Multi-threaded text extraction supporting PDF (`pdfplumber`) and DOCX (`python-docx`).
 - **🎯 Deterministic ATS Scoring**: 0–100 match score calculated via weighted policies across hard skills, experience relevancy, tooling, and education.
 - **💬 Verbatim Evidence Extraction**: Matches skills directly to exact quote snippets extracted from the resume.
-- **🛡️ Hallucination-Free AI**: Two-pass LLM pipeline that drops unverified entities not present in raw document text.
+- **🛡️ Evidence-Grounded Extraction**: Two-pass LLM pipeline that drops unverified entities not present in raw document text.
 - **⚡ Real-Time SaaS Interface**: Next.js 16 web app featuring Framer Motion micro-interactions and dark mode.
 - **🔒 Enterprise Security**: Magic byte file validation, stream limits (<5MB), UUID filename sanitization, and DoS defenses.
 
@@ -63,7 +63,7 @@ graph TD
     Val -->|"Sanitized Bytes"| Pool["ProcessPoolExecutor (Concurrent Parsers)"]
     Pool --> Struct["Pydantic v2 Normalizer"]
     Struct --> Matcher["Deterministic ATS Matching Engine"]
-    Matcher --> Verifier["Dual-Pass Hallucination Verifier"]
+    Matcher --> Verifier["Dual-Pass Verification Guard"]
     Verifier -->|"Verified Match Report"| API
     API -->|"JSON Response"| Client
 ```
@@ -144,7 +144,7 @@ Resume_Analyzer/
 
 ## 🧠 Engineering Highlights
 
-- **Hallucination Guard**: Cross-references LLM entity extractions against raw document source strings before score computation.
+- **Verification Guard**: Cross-references LLM entity extractions against raw document source strings before score computation.
 - **Evidence Collection**: Extracts verbatim resume text snippets as evidence for every matched technical skill.
 - **Deterministic ATS Engine**: Calculates match scores using strict mathematical policy weights rather than unconstrained LLM output.
 - **Concurrent Parsing**: Offloads CPU-bound PDF/DOCX parsing to `ProcessPoolExecutor` using `asyncio.gather` to keep FastAPI's event loop unblocked.
