@@ -35,7 +35,7 @@ def extract_jd_text(file_content: bytes, extension: str) -> str:
     ext = extension.lower()
     if ext == ".pdf":
         return extract_text_from_pdf(file_content)
-    elif ext in [".docx", ".doc"]:
+    elif ext == ".docx":
         return extract_text_from_docx(file_content)
     elif ext == ".txt":
         return extract_text_from_txt(file_content)

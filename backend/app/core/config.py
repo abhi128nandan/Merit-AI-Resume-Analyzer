@@ -34,3 +34,6 @@ class Settings:
 
 
 settings = Settings()
+
+if settings.ENVIRONMENT.lower() == "production" and settings.SECRET_KEY == "default_secret_key_change_in_production":
+    raise ValueError("SECRET_KEY environment variable MUST be set in production.")

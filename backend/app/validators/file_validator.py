@@ -73,11 +73,9 @@ def validate_uploaded_file(
                 message="Invalid file format. File does not appear to be a valid PDF.",
                 details={"expected_magic_bytes": "%PDF-"},
             )
-    elif extension in [".doc", ".docx"]:
-        # docx files are zip archives starting with PK
-        # older .doc files use a different compound file binary format (D0 CF 11 E0)
-        # We'll just check .docx for now since python-docx only supports docx
-        if extension == ".docx" and not file_content.startswith(b"PK\x03\x04"):
+    elif extension == ".docx":
+        # Check docx magic bytes
+        if not file_content.startswith(b"PK\x03\x04"):
             raise UnsupportedFileTypeException(
                 message="Invalid file format. File does not appear to be a valid DOCX.",
                 details={"expected_magic_bytes": "PK"},

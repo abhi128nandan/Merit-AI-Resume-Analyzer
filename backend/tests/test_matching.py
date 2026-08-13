@@ -186,3 +186,94 @@ def test_experience_evidence_collection():
     assert len(evidence) == 1
     assert evidence[0].match_level == MatchLevel.EXACT
     assert "Senior Engineer (3.9 yrs)" in evidence[0].evidence_found
+
+
+from app.matching.report import generate_match_report
+from app.schemas.match_report import MatchCategoryResult
+
+def test_generate_match_report_all_categories():
+    policy = DEFAULT_POLICY
+    skills_eval = MatchCategoryResult(score=80, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    exp_eval = MatchCategoryResult(score=90, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    edu_eval = MatchCategoryResult(score=100, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    title_eval = MatchCategoryResult(score=70, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+
+    report = generate_match_report(skills_eval, exp_eval, edu_eval, title_eval, policy, False)
+    
+    # 80*0.4 + 90*0.3 + 100*0.15 + 70*0.15 = 32 + 27 + 15 + 10.5 = 84.5 -> int(84)
+    assert report.overall_score == 84
+    assert skills_eval.applied_weight == 0.40
+    assert exp_eval.applied_weight == 0.30
+    assert edu_eval.applied_weight == 0.15
+    assert title_eval.applied_weight == 0.15
+
+def test_generate_match_report_education_missing():
+    policy = DEFAULT_POLICY
+    skills_eval = MatchCategoryResult(score=80, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    exp_eval = MatchCategoryResult(score=90, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    edu_eval = MatchCategoryResult(score=0, evidence=[])
+    title_eval = MatchCategoryResult(score=70, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+
+    report = generate_match_report(skills_eval, exp_eval, edu_eval, title_eval, policy, False)
+    
+    # Weights sum = 0.4 + 0.3 + 0.15 = 0.85
+    # Score = (80*0.4 + 90*0.3 + 70*0.15) / 0.85 = (32 + 27 + 10.5) / 0.85 = 69.5 / 0.85 = 81.76 -> 81
+    assert report.overall_score == 81
+    assert edu_eval.applied_weight == 0.0
+
+def test_generate_match_report_title_missing():
+    policy = DEFAULT_POLICY
+    skills_eval = MatchCategoryResult(score=80, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    exp_eval = MatchCategoryResult(score=90, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    edu_eval = MatchCategoryResult(score=100, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    title_eval = MatchCategoryResult(score=0, evidence=[])
+
+    report = generate_match_report(skills_eval, exp_eval, edu_eval, title_eval, policy, False)
+    
+    # Weights sum = 0.4 + 0.3 + 0.15 = 0.85
+    # Score = (80*0.4 + 90*0.3 + 100*0.15) / 0.85 = (32 + 27 + 15) / 0.85 = 74 / 0.85 = 87.05 -> 87
+    assert report.overall_score == 87
+    assert title_eval.applied_weight == 0.0
+
+def test_generate_match_report_multiple_missing():
+    policy = DEFAULT_POLICY
+    skills_eval = MatchCategoryResult(score=80, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    exp_eval = MatchCategoryResult(score=0, evidence=[])
+    edu_eval = MatchCategoryResult(score=0, evidence=[])
+    title_eval = MatchCategoryResult(score=0, evidence=[])
+
+    report = generate_match_report(skills_eval, exp_eval, edu_eval, title_eval, policy, False)
+    assert report.overall_score == 80  # 100% weight to skills
+    assert skills_eval.applied_weight == 0.40
+
+def test_determinism_exact_same_input():
+    policy = DEFAULT_POLICY
+    skills_eval = MatchCategoryResult(score=80, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    exp_eval = MatchCategoryResult(score=90, evidence=[EvidenceResult(requirement="Req", match_level=MatchLevel.EXACT, evidence_found="x")])
+    edu_eval = MatchCategoryResult(score=100, evidence=[])
+    title_eval = MatchCategoryResult(score=70, evidence=[])
+
+    report1 = generate_match_report(skills_eval, exp_eval, edu_eval, title_eval, policy, False)
+    report2 = generate_match_report(skills_eval, exp_eval, edu_eval, title_eval, policy, False)
+    assert report1.overall_score == report2.overall_score
+
+def test_weight_sum_valid():
+    policy = DEFAULT_POLICY
+    policy.validate_weights()
+    
+def test_boundary_scores():
+    policy = DEFAULT_POLICY
+    # All 0
+    s_0 = MatchCategoryResult(score=0, evidence=[EvidenceResult(requirement="R", match_level=MatchLevel.MISSING, evidence_found="")])
+    report_0 = generate_match_report(s_0, s_0, s_0, s_0, policy, False)
+    assert report_0.overall_score == 0
+    
+    # All 100
+    s_100 = MatchCategoryResult(score=100, evidence=[EvidenceResult(requirement="R", match_level=MatchLevel.EXACT, evidence_found="")])
+    report_100 = generate_match_report(s_100, s_100, s_100, s_100, policy, False)
+    assert report_100.overall_score == 100
+    
+    # No evidence at all
+    s_empty = MatchCategoryResult(score=0, evidence=[])
+    report_empty = generate_match_report(s_empty, s_empty, s_empty, s_empty, policy, False)
+    assert report_empty.overall_score == 0
