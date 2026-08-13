@@ -1,11 +1,7 @@
 import pathlib
 
 from app.core.logging import logger
-from app.parsers.job_description.cache import (
-    cache_parsed_jd,
-    generate_jd_hash,
-    get_cached_jd,
-)
+
 from app.parsers.job_description.detector import is_valid_jd
 from app.parsers.job_description.extractor import extract_jd_text
 from app.parsers.job_description.llm_parser import parse_jd_with_llm
@@ -21,10 +17,8 @@ def process_job_description(file_content: bytes, filename: str) -> VerifiedJD:
     1. Text Extraction (.txt, .pdf, .docx)
     2. Text Cleaning & Normalization (reused from resume cleaner)
     3. JD Detection (Deterministic Heuristic)
-    4. Cache Lookup (SHA-256)
-    5. LLM Semantic Structuring
-    6. Hallucination Verification & Confidence Scoring
-    7. Caching
+    4. LLM Semantic Structuring
+    5. Hallucination Verification & Confidence Scoring
 
     Args:
         file_content: The binary content of the validated file.
@@ -48,11 +42,6 @@ def process_job_description(file_content: bytes, filename: str) -> VerifiedJD:
     # Step 3: Detect
     is_valid_jd(cleaned_text)
 
-    # Step 4: Cache Lookup
-    text_hash = generate_jd_hash(cleaned_text)
-    cached_jd = get_cached_jd(text_hash)
-    if cached_jd:
-        return cached_jd
 
     # Step 5: LLM Extraction
     llm_output = parse_jd_with_llm(cleaned_text)
@@ -63,7 +52,5 @@ def process_job_description(file_content: bytes, filename: str) -> VerifiedJD:
         f"Verification complete. Overall JD confidence: {verified_jd.overall_confidence}%"
     )
 
-    # Step 7: Cache Result
-    cache_parsed_jd(text_hash, verified_jd)
 
     return verified_jd

@@ -16,18 +16,22 @@ def generate_match_report(
     weighted_score = 0.0
 
     if skills_eval.evidence:
+        skills_eval.applied_weight = policy.skills_weight
         active_weight_sum += policy.skills_weight
         weighted_score += skills_eval.score * policy.skills_weight
 
     if exp_eval.evidence:
+        exp_eval.applied_weight = policy.experience_weight
         active_weight_sum += policy.experience_weight
         weighted_score += exp_eval.score * policy.experience_weight
 
     if edu_eval.evidence:
+        edu_eval.applied_weight = policy.education_weight
         active_weight_sum += policy.education_weight
         weighted_score += edu_eval.score * policy.education_weight
 
     if title_eval.evidence:
+        title_eval.applied_weight = policy.title_weight
         active_weight_sum += policy.title_weight
         weighted_score += title_eval.score * policy.title_weight
 
