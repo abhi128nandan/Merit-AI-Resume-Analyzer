@@ -1,11 +1,11 @@
-import os
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
+
 from app.core.config import settings
 
 # Use SQLite for local development by default, or Postgres if DATABASE_URL is set in prod/docker.
-DEFAULT_DB_URL = "sqlite+aiosqlite:///./merit_ai.db"
-DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DB_URL)
+DATABASE_URL = settings.DATABASE_URL
 
 engine = create_async_engine(
     DATABASE_URL,
@@ -21,6 +21,7 @@ SessionLocal = async_sessionmaker(
 )
 
 Base = declarative_base()
+
 
 async def get_db():
     """FastAPI Dependency for database sessions."""

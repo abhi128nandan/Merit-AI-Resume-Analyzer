@@ -1,14 +1,15 @@
-from typing import List, Optional, Set
+import re
 from dataclasses import dataclass
 from enum import IntEnum
+from typing import List, Optional, Set
 
+from app.matching.normalizer import normalize_term, EducationNormalizer
+from app.matching.providers import concept_provider
 from app.matching.similarity import evaluate_similarity, extract_months_of_experience
 from app.schemas.match_report import EvidenceResult, MatchLevel
 from app.schemas.parsed_jd import VerifiedJD
 from app.schemas.parsed_resume import VerifiedParsedResume
-from app.matching.normalizer import normalize_term
-from app.matching.providers import concept_provider
-import re
+
 
 class EvidencePriority(IntEnum):
     VERIFIED = 50
@@ -18,15 +19,17 @@ class EvidencePriority(IntEnum):
     CONTEXT = 10
     MISSING = 0
 
+
 @dataclass
 class InternalEvidenceResult:
     requirement: str
     match_level: MatchLevel
-    match_type: str 
-    confidence: str 
+    match_type: str
+    confidence: str
     evidence_found: Optional[str]
     priority: EvidencePriority
     source: str
+
 
 def map_to_public(internal: InternalEvidenceResult) -> EvidenceResult:
     if internal.evidence_found:
@@ -36,63 +39,101 @@ def map_to_public(internal: InternalEvidenceResult) -> EvidenceResult:
             formatted = internal.evidence_found
     else:
         formatted = None
-        
+
     return EvidenceResult(
         requirement=internal.requirement,
         match_level=internal.match_level,
-        evidence_found=formatted
+        evidence_found=formatted,
     )
+
 
 def check_text_for_requirement(
     text: str, source: str, req_value: str, norm_req: str, req_aliases: Set[str]
 ) -> List[InternalEvidenceResult]:
     results = []
     norm_text = normalize_term(text)
-    
+
     # 1. Exact Match / Alias Match
     if norm_text in req_aliases:
-        priority = EvidencePriority.VERIFIED if norm_text == norm_req else EvidencePriority.ALIAS
+        priority = (
+            EvidencePriority.VERIFIED
+            if norm_text == norm_req
+            else EvidencePriority.ALIAS
+        )
         match_type = "Verified" if norm_text == norm_req else "Alias"
-        results.append(InternalEvidenceResult(
-            req_value, MatchLevel.EXACT, match_type, "High", text, priority, source
-        ))
-        return results # Highest possible, no need to keep checking this text
+        results.append(
+            InternalEvidenceResult(
+                req_value, MatchLevel.EXACT, match_type, "High", text, priority, source
+            )
+        )
+        return results  # Highest possible, no need to keep checking this text
 
     for alias in req_aliases:
-        boundary_start = r'(?:^|[^\w+#])'
-        boundary_end = r'(?:$|[^\w+#])'
+        boundary_start = r"(?:^|[^\w+#])"
+        boundary_end = r"(?:$|[^\w+#])"
         pattern = boundary_start + re.escape(alias) + boundary_end
         if re.search(pattern, norm_text):
-            priority = EvidencePriority.VERIFIED if alias == norm_req else EvidencePriority.ALIAS
+            priority = (
+                EvidencePriority.VERIFIED
+                if alias == norm_req
+                else EvidencePriority.ALIAS
+            )
             match_type = "Verified" if alias == norm_req else "Alias"
-            results.append(InternalEvidenceResult(
-                req_value, MatchLevel.EXACT, match_type, "High", text, priority, source
-            ))
+            results.append(
+                InternalEvidenceResult(
+                    req_value,
+                    MatchLevel.EXACT,
+                    match_type,
+                    "High",
+                    text,
+                    priority,
+                    source,
+                )
+            )
             return results
 
     # 2. Technology Evidence
     techs = concept_provider.get_technologies_for_concept(norm_req)
     for tech in techs:
-        boundary_start = r'(?:^|[^\w+#])'
-        boundary_end = r'(?:$|[^\w+#])'
+        boundary_start = r"(?:^|[^\w+#])"
+        boundary_end = r"(?:$|[^\w+#])"
         pattern = boundary_start + re.escape(tech) + boundary_end
         if re.search(pattern, norm_text):
-            results.append(InternalEvidenceResult(
-                req_value, MatchLevel.SEMANTIC, "Technology", "Medium", text, EvidencePriority.TECHNOLOGY, source
-            ))
-            break # Once we found one tech, we can stop for this text
+            results.append(
+                InternalEvidenceResult(
+                    req_value,
+                    MatchLevel.SEMANTIC,
+                    "Technology",
+                    "Medium",
+                    text,
+                    EvidencePriority.TECHNOLOGY,
+                    source,
+                )
+            )
+            break  # Once we found one tech, we can stop for this text
 
     # 3. Contextual Fallback
     if not results:
         level = evaluate_similarity(text, req_value)
         if level in [MatchLevel.EXACT, MatchLevel.SEMANTIC, MatchLevel.PARTIAL]:
-            results.append(InternalEvidenceResult(
-                req_value, level, "Context", "Low", text, EvidencePriority.CONTEXT, source
-            ))
-            
+            results.append(
+                InternalEvidenceResult(
+                    req_value,
+                    level,
+                    "Context",
+                    "Low",
+                    text,
+                    EvidencePriority.CONTEXT,
+                    source,
+                )
+            )
+
     return results
 
-def resolve_evidence_conflicts(results: List[InternalEvidenceResult]) -> InternalEvidenceResult:
+
+def resolve_evidence_conflicts(
+    results: List[InternalEvidenceResult],
+) -> Optional[InternalEvidenceResult]:
     """
     Deterministic conflict resolution:
     1. Highest Priority (Verified > Alias > Technology > Coursework > Context > Missing)
@@ -101,13 +142,14 @@ def resolve_evidence_conflicts(results: List[InternalEvidenceResult]) -> Interna
     """
     if not results:
         return None
-        
+
     def sort_key(res: InternalEvidenceResult):
         evidence_len = len(res.evidence_found) if res.evidence_found else 9999
         return (res.priority, -evidence_len)
-        
+
     results.sort(key=sort_key, reverse=True)
     return results[0]
+
 
 def collect_skills_evidence(
     resume: VerifiedParsedResume, jd: VerifiedJD, is_required: bool
@@ -121,44 +163,99 @@ def collect_skills_evidence(
 
         norm_req = normalize_term(req.value)
         req_aliases = concept_provider.get_aliases(norm_req)
-        
+
         all_results: List[InternalEvidenceResult] = []
-        
+
         # Check Skills Section
         for s in resume.skills:
             if s.verification_state != "Hallucinated":
-                all_results.extend(check_text_for_requirement(s.value, "Skills", req.value, norm_req, req_aliases))
-                
+                all_results.extend(
+                    check_text_for_requirement(
+                        s.value, "Skills", req.value, norm_req, req_aliases
+                    )
+                )
+
         # Check Experience Section
         for exp in resume.experience:
             if exp.title.verification_state != "Hallucinated":
-                all_results.extend(check_text_for_requirement(exp.title.value, "Experience Title", req.value, norm_req, req_aliases))
+                all_results.extend(
+                    check_text_for_requirement(
+                        exp.title.value,
+                        "Experience Title",
+                        req.value,
+                        norm_req,
+                        req_aliases,
+                    )
+                )
             for resp in exp.responsibilities:
                 if resp.verification_state != "Hallucinated":
-                    all_results.extend(check_text_for_requirement(resp.value, "Experience Details", req.value, norm_req, req_aliases))
-                    
+                    all_results.extend(
+                        check_text_for_requirement(
+                            resp.value,
+                            "Experience Details",
+                            req.value,
+                            norm_req,
+                            req_aliases,
+                        )
+                    )
+
         # Check Summary
         if resume.summary and resume.summary.verification_state != "Hallucinated":
-            all_results.extend(check_text_for_requirement(resume.summary.value, "Summary", req.value, norm_req, req_aliases))
+            all_results.extend(
+                check_text_for_requirement(
+                    resume.summary.value, "Summary", req.value, norm_req, req_aliases
+                )
+            )
 
         # Check Coursework
-        # A coursework match specifically looks at degree texts
+        # A coursework match specifically looks at degree texts and extracted coursework fields
         for edu in resume.education:
             if edu.degree.verification_state != "Hallucinated":
                 # Check if the degree text contains a mapped coursework string for the required concept
-                concepts = concept_provider.get_concepts_for_coursework(edu.degree.value)
+                concepts = concept_provider.get_concepts_for_coursework(
+                    edu.degree.value
+                )
                 if norm_req in concepts or any(a in concepts for a in req_aliases):
-                    all_results.append(InternalEvidenceResult(
-                        req.value, MatchLevel.SEMANTIC, "Coursework", "Medium", f"Course: {edu.degree.value}", EvidencePriority.COURSEWORK, "Education"
-                    ))
+                    all_results.append(
+                        InternalEvidenceResult(
+                            req.value,
+                            MatchLevel.SEMANTIC,
+                            "Coursework",
+                            "Medium",
+                            f"Course: {edu.degree.value}",
+                            EvidencePriority.COURSEWORK,
+                            "Education",
+                        )
+                    )
+            # Check explicitly extracted coursework
+            if hasattr(edu, "coursework"):
+                for course_obj in edu.coursework:
+                    if course_obj.verification_state != "Hallucinated":
+                        all_results.extend(
+                            check_text_for_requirement(
+                                course_obj.value,
+                                "Coursework",
+                                req.value,
+                                norm_req,
+                                req_aliases,
+                            )
+                        )
 
+        best: Optional[InternalEvidenceResult]
         if not all_results:
             best = InternalEvidenceResult(
-                req.value, MatchLevel.MISSING, "Missing", "Low", None, EvidencePriority.MISSING, "None"
+                req.value,
+                MatchLevel.MISSING,
+                "Missing",
+                "Low",
+                None,
+                EvidencePriority.MISSING,
+                "None",
             )
         else:
             best = resolve_evidence_conflicts(all_results)
-            
+            assert best is not None
+
         evidence_list.append(map_to_public(best))
 
     return evidence_list
@@ -167,7 +264,7 @@ def collect_skills_evidence(
 def collect_experience_evidence(
     resume: VerifiedParsedResume, jd: VerifiedJD
 ) -> List[EvidenceResult]:
-    if jd.experience_requirements.verification_state == "Hallucinated":
+    if jd.experience_requirements.verification_state == "Hallucinated" or jd.experience_requirements.value == "Not Specified":
         return []
 
     req_months = extract_months_of_experience(jd.experience_requirements.value)
@@ -176,18 +273,22 @@ def collect_experience_evidence(
 
     for exp in resume.experience:
         if exp.title.verification_state != "Hallucinated":
-            start_month = extract_months_of_experience(exp.start_date.value, is_date=True)
-            end_month = extract_months_of_experience(exp.end_date.value, is_date=True, is_end=True)
-            
+            start_month = extract_months_of_experience(
+                exp.start_date.value, is_date=True
+            )
+            end_month = extract_months_of_experience(
+                exp.end_date.value, is_date=True, is_end=True
+            )
+
             if start_month > 0 and end_month >= start_month:
                 months_spent = end_month - start_month
             else:
                 months_spent = 0
-            
+
             # Minimum 1 month if same month
             if start_month > 0 and start_month == end_month:
                 months_spent = 1
-                
+
             if months_spent > 0 and months_spent < (50 * 12):
                 candidate_months += months_spent
                 years_display = round(months_spent / 12, 1)
@@ -207,17 +308,21 @@ def collect_experience_evidence(
         match_type="Experience Calculation",
         confidence="High" if candidate_months > 0 else "Low",
         evidence_found=", ".join(evidence_texts) if evidence_texts else None,
-        priority=EvidencePriority.VERIFIED if match_level == MatchLevel.EXACT else EvidencePriority.MISSING,
-        source="Experience"
+        priority=(
+            EvidencePriority.VERIFIED
+            if match_level == MatchLevel.EXACT
+            else EvidencePriority.MISSING
+        ),
+        source="Experience",
     )
-    
+
     return [map_to_public(best)]
 
 
 def collect_education_evidence(
     resume: VerifiedParsedResume, jd: VerifiedJD
 ) -> List[EvidenceResult]:
-    if jd.education_requirements.verification_state == "Hallucinated":
+    if jd.education_requirements.verification_state == "Hallucinated" or jd.education_requirements.value == "Not Specified":
         return []
 
     best = InternalEvidenceResult(
@@ -227,17 +332,95 @@ def collect_education_evidence(
         confidence="Low",
         evidence_found=None,
         priority=EvidencePriority.MISSING,
-        source="None"
+        source="None",
     )
 
+    # Parse the JD requirement
+    req_level, req_spec = EducationNormalizer.parse(jd.education_requirements.value)
+    
+    # We will score based on matching level and matching specialization
     for edu in resume.education:
         if edu.degree.verification_state != "Hallucinated":
-            level = evaluate_similarity(edu.degree.value, jd.education_requirements.value)
-            if level in [MatchLevel.EXACT, MatchLevel.SEMANTIC]:
-                best = InternalEvidenceResult(jd.education_requirements.value, level, "Semantic", "High", edu.degree.value, EvidencePriority.CONTEXT, "Education")
+            cand_level, cand_spec = EducationNormalizer.parse(edu.degree.value)
+            
+            # 1. Compare degree level
+            level_match = False
+            if req_level == "Unknown" or cand_level == req_level:
+                level_match = True
+            elif cand_level == "Doctorate" and req_level in ["Master", "Bachelor"]:
+                level_match = True
+            elif cand_level == "Master" and req_level == "Bachelor":
+                level_match = True
+                
+            # 2. Compare specialization
+            # Fallback to standard string similarity for the extracted specialization
+            spec_similarity = evaluate_similarity(cand_spec, req_spec)
+            
+            # If the normalizer stripped everything and spec is empty, check if they were empty initially
+            if not req_spec and not cand_spec:
+                spec_similarity = MatchLevel.EXACT
+            
+            # Calculate specialization match level
+            spec_match_level = MatchLevel.MISSING
+            if spec_similarity in [MatchLevel.EXACT, MatchLevel.SEMANTIC]:
+                spec_match_level = MatchLevel.SEMANTIC
+            elif not req_spec:
+                spec_match_level = MatchLevel.SEMANTIC # Matched level and no spec required
+            else:
+                # Check bag of words intersection
+                set1 = set(w for w in cand_spec.split() if len(w) > 2)
+                set2 = set(w for w in req_spec.split() if len(w) > 2)
+                
+                if set1 and set2 and set2.issubset(set1):
+                    spec_match_level = MatchLevel.SEMANTIC
+                elif set1 and set2 and set1.intersection(set2):
+                    spec_match_level = MatchLevel.SEMANTIC
+                elif spec_similarity == MatchLevel.PARTIAL:
+                    spec_match_level = MatchLevel.PARTIAL
+            
+            # Calculate final combined match level
+            final_level = MatchLevel.MISSING
+            if level_match:
+                final_level = spec_match_level
+            else:
+                # If level does not match (either lower or Unknown), but specialization matches well
+                if spec_match_level == MatchLevel.SEMANTIC:
+                    final_level = MatchLevel.PARTIAL
+                elif spec_match_level == MatchLevel.PARTIAL:
+                    final_level = MatchLevel.WEAK
+            
+            # Record the highest match we can find
+            if final_level in [MatchLevel.EXACT, MatchLevel.SEMANTIC]:
+                best = InternalEvidenceResult(
+                    jd.education_requirements.value,
+                    final_level,
+                    "Semantic",
+                    "High",
+                    edu.degree.value,
+                    EvidencePriority.CONTEXT,
+                    "Education",
+                )
                 break
-            elif level == MatchLevel.PARTIAL and best.match_level == MatchLevel.MISSING:
-                best = InternalEvidenceResult(jd.education_requirements.value, level, "Partial", "Medium", edu.degree.value, EvidencePriority.CONTEXT, "Education")
+            elif final_level == MatchLevel.PARTIAL and best.match_level in [MatchLevel.MISSING, MatchLevel.WEAK]:
+                best = InternalEvidenceResult(
+                    jd.education_requirements.value,
+                    final_level,
+                    "Partial",
+                    "Medium",
+                    edu.degree.value,
+                    EvidencePriority.CONTEXT,
+                    "Education",
+                )
+            elif final_level == MatchLevel.WEAK and best.match_level == MatchLevel.MISSING:
+                best = InternalEvidenceResult(
+                    jd.education_requirements.value,
+                    final_level,
+                    "Weak",
+                    "Low",
+                    edu.degree.value,
+                    EvidencePriority.CONTEXT,
+                    "Education",
+                )
 
     return [map_to_public(best)]
 
@@ -245,7 +428,7 @@ def collect_education_evidence(
 def collect_title_evidence(
     resume: VerifiedParsedResume, jd: VerifiedJD
 ) -> List[EvidenceResult]:
-    if jd.job_title.verification_state == "Hallucinated":
+    if jd.job_title.verification_state == "Hallucinated" or jd.job_title.value == "Not Specified":
         return []
 
     best = InternalEvidenceResult(
@@ -255,16 +438,32 @@ def collect_title_evidence(
         confidence="Low",
         evidence_found=None,
         priority=EvidencePriority.MISSING,
-        source="None"
+        source="None",
     )
 
     for exp in resume.experience:
         if exp.title.verification_state != "Hallucinated":
             level = evaluate_similarity(exp.title.value, jd.job_title.value)
             if level in [MatchLevel.EXACT, MatchLevel.SEMANTIC]:
-                best = InternalEvidenceResult(jd.job_title.value, level, "Semantic", "High", exp.title.value, EvidencePriority.CONTEXT, "Experience")
+                best = InternalEvidenceResult(
+                    jd.job_title.value,
+                    level,
+                    "Semantic",
+                    "High",
+                    exp.title.value,
+                    EvidencePriority.CONTEXT,
+                    "Experience",
+                )
                 break
             elif level == MatchLevel.PARTIAL and best.match_level == MatchLevel.MISSING:
-                best = InternalEvidenceResult(jd.job_title.value, level, "Partial", "Medium", exp.title.value, EvidencePriority.CONTEXT, "Experience")
+                best = InternalEvidenceResult(
+                    jd.job_title.value,
+                    level,
+                    "Partial",
+                    "Medium",
+                    exp.title.value,
+                    EvidencePriority.CONTEXT,
+                    "Experience",
+                )
 
     return [map_to_public(best)]
