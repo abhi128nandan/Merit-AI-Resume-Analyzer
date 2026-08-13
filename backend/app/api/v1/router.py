@@ -1,23 +1,24 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile, Depends
 from typing import Optional
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_optional_current_user
+from app.api.v1.endpoints import auth, history
+from app.core.database import get_db
 from app.core.logging import logger
 from app.exceptions.custom_exceptions import ResumeAnalyzerException
+from app.models.analysis_report import AnalysisReport
+from app.models.user import User
 from app.schemas.analysis import AnalysisResponse
 from app.services.analysis_service import execute_analysis_workflow
 from app.validators.file_validator import validate_uploaded_file
-from app.api.v1.endpoints import auth, history
-from app.core.database import get_db
-from app.api.deps import get_optional_current_user
-from app.models.user import User
-from app.models.analysis_report import AnalysisReport
-import json
 
 api_v1_router = APIRouter()
 
 api_v1_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_v1_router.include_router(history.router, prefix="/history", tags=["history"])
+
 
 @api_v1_router.post(
     "/analyze",
@@ -30,7 +31,7 @@ async def analyze_documents(
     resume: UploadFile = File(..., description="The candidate's resume (PDF/DOCX)"),
     jd: UploadFile = File(..., description="The target Job Description (PDF/DOCX/TXT)"),
     db: AsyncSession = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_current_user)
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> AnalysisResponse:
     """The main entry point for the AI Resume Analyzer V1."""
 
@@ -80,7 +81,7 @@ async def analyze_documents(
             jd_bytes=jd_bytes,
             jd_filename=jd_filename,
         )
-        
+
         # Save to database if authenticated
         if current_user:
             report_record = AnalysisReport(
@@ -88,11 +89,12 @@ async def analyze_documents(
                 resume_filename=resume_filename,
                 jd_filename=jd_filename,
                 overall_score=response.match_report.overall_score,
-                full_report_data=response.model_dump()
+                full_report_data=response.model_dump(),
             )
-            db.add(report_record)
-            await db.commit()
-            
+            from app.repositories.postgres.analysis_repository import SqlAlchemyAnalysisRepository
+            repo = SqlAlchemyAnalysisRepository(db)
+            await repo.save_report(report_record)
+
         return response
     except ResumeAnalyzerException as e:
         # Passes the error up to the global handler

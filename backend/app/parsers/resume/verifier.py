@@ -117,6 +117,11 @@ def verify_resume_data(
             or VerifiedField(
                 value=edu.graduation_year, verification_state="Unverified"
             ),
+            coursework=[
+                verify_field(c, original_text)
+                or VerifiedField(value=c, verification_state="Unverified")
+                for c in edu.coursework
+            ],
         )
         v_education.append(v_edu)
 
@@ -148,7 +153,7 @@ def verify_resume_data(
         )
     edu_fields = []
     for v_ed in v_education:
-        edu_fields.extend([v_ed.degree, v_ed.institution, v_ed.graduation_year])
+        edu_fields.extend([v_ed.degree, v_ed.institution, v_ed.graduation_year] + v_ed.coursework)
 
     section_confidence = {
         "contact": calculate_section_confidence(contact_fields),

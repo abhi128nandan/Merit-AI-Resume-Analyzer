@@ -1,11 +1,14 @@
 import time
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from app.api.v1 import api_v1_router
 from app.core.config import settings
 from app.core.context import correlation_id_ctx
+from app.core.database import get_db
 from app.core.logging import logger
 from app.exceptions.handlers import register_exception_handlers
 from app.services.analysis_service import generate_correlation_id
@@ -22,7 +25,7 @@ app = FastAPI(
 # Set up CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,7 +37,7 @@ async def correlation_and_logging_middleware(request: Request, call_next):
     # Support both trace-id style Request-ID and custom Correlation-ID
     request_id = request.headers.get("X-Request-ID") or generate_correlation_id()
     cid = request.headers.get("X-Correlation-ID") or request_id
-    
+
     correlation_id_ctx.set(cid)
 
     start_time = time.time()
@@ -43,7 +46,7 @@ async def correlation_and_logging_middleware(request: Request, call_next):
 
     response.headers["X-Correlation-ID"] = cid
     response.headers["X-Request-ID"] = request_id
-    
+
     logger.info(
         f"[{cid}] {request.method} {request.url.path} - Status: {response.status_code} - Execution Time: {duration_ms}ms"
     )
@@ -78,8 +81,10 @@ def health_live():
 
 
 @app.get("/health/ready", tags=["Health"])
-def health_ready():
+async def health_ready(db: AsyncSession = Depends(get_db)):
     """Readiness probe - indicates if the application is ready to accept traffic."""
-    # In a full setup, this would ping the DB: `await db.execute("SELECT 1")`
-    return {"status": "ready"}
-
+    try:
+        await db.execute(text("SELECT 1"))
+        return {"status": "ready"}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database not ready")

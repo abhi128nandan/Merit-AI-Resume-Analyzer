@@ -6,11 +6,75 @@ from app.schemas.match_report import EvidenceResult, MatchLevel
 from app.schemas.parsed_jd import VerifiedJD, VerifiedJDField
 from app.schemas.parsed_resume import (
     VerifiedContact,
+    VerifiedEducation,
     VerifiedExperience,
     VerifiedField,
     VerifiedParsedResume,
 )
 
+from app.matching.normalizer import EducationNormalizer
+from app.matching.evidence import collect_education_evidence
+
+def test_education_normalizer():
+    # Test level extraction and specialization extraction
+    lvl, spec = EducationNormalizer.parse("B.Tech in Computer Science and Engineering")
+    assert lvl == "Bachelor"
+    assert "computer science" in spec
+
+    lvl, spec = EducationNormalizer.parse("Bachelor's degree in Computer Science, Computer Engineering, or a related technical field")
+    assert lvl == "Bachelor"
+    assert "computer science" in spec
+    assert "computer engineering" in spec
+
+    lvl, spec = EducationNormalizer.parse("Master of Science in Data Science")
+    assert lvl == "Master"
+    assert "data science" in spec
+
+    lvl, spec = EducationNormalizer.parse("Ph.D in Machine Learning")
+    assert lvl == "Doctorate"
+    assert "machine learning" in spec
+
+def test_education_matching():
+    # Create mock resume and JD
+    resume = build_mock_verified_resume()
+    jd = build_mock_verified_jd()
+    
+    # 1. Test semantic match (B.Tech in CS vs Bachelor's in CS)
+    resume.education = [
+        VerifiedEducation(
+            degree=VerifiedField(value="B.Tech in Computer Science and Engineering", verification_state="Verified"),
+            institution=VerifiedField(value="Univ", verification_state="Verified"),
+            graduation_year=VerifiedField(value="2020", verification_state="Verified"),
+            coursework=[]
+        )
+    ]
+    jd.education_requirements = VerifiedJDField(value="Bachelor's degree in Computer Science", verification_state="Verified")
+    evidence = collect_education_evidence(resume, jd)
+    assert evidence[0].match_level == MatchLevel.SEMANTIC
+    
+    # 2. Test negative match (Bachelor of Arts in English vs Bachelor's in CS)
+    resume.education = [
+        VerifiedEducation(
+            degree=VerifiedField(value="Bachelor of Arts in English", verification_state="Verified"),
+            institution=VerifiedField(value="Univ", verification_state="Verified"),
+            graduation_year=VerifiedField(value="2020", verification_state="Verified"),
+            coursework=[]
+        )
+    ]
+    evidence = collect_education_evidence(resume, jd)
+    assert evidence[0].match_level == MatchLevel.MISSING
+    
+    # 3. Test Master satisfies Bachelor requirement
+    resume.education = [
+        VerifiedEducation(
+            degree=VerifiedField(value="Master of Science in Computer Science", verification_state="Verified"),
+            institution=VerifiedField(value="Univ", verification_state="Verified"),
+            graduation_year=VerifiedField(value="2020", verification_state="Verified"),
+            coursework=[]
+        )
+    ]
+    evidence = collect_education_evidence(resume, jd)
+    assert evidence[0].match_level == MatchLevel.SEMANTIC
 
 def test_similarity_exact_match():
     assert evaluate_similarity("Python", "Python") == MatchLevel.EXACT
