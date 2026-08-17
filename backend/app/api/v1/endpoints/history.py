@@ -50,3 +50,22 @@ async def get_analysis(analysis_id: str, db: AsyncSession = Depends(get_db), cur
         raise HTTPException(status_code=404, detail="Analysis report not found")
         
     return report.full_report_data
+
+@router.delete("/{analysis_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_analysis(analysis_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Soft-deletes a specific analysis report by ID."""
+    result = await db.execute(
+        select(AnalysisReport)
+        .where(AnalysisReport.id == analysis_id)
+        .where(AnalysisReport.user_id == current_user.id)
+        .where(AnalysisReport.is_deleted == False)
+    )
+    report = result.scalars().first()
+    
+    if not report:
+        raise HTTPException(status_code=404, detail="Analysis report not found")
+        
+    report.is_deleted = True
+    await db.commit()
+    return None
+

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from app.core.context import correlation_id_ctx
 from app.core.logging import logger
@@ -9,6 +10,22 @@ from app.exceptions.custom_exceptions import ResumeAnalyzerException
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Registers custom exception handlers on the FastAPI application instance."""
+
+    @app.exception_handler(RateLimitExceeded)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+        cid = correlation_id_ctx.get("UNKNOWN")
+        logger.warning(f"[{cid}] Rate limit exceeded | Endpoint: {request.url.path}")
+        return JSONResponse(
+            status_code=429,
+            headers={"X-Correlation-ID": cid},
+            content={
+                "error": {
+                    "code": "RateLimitExceeded",
+                    "message": "Rate limit exceeded.",
+                    "details": None,
+                }
+            },
+        )
 
     @app.exception_handler(ResumeAnalyzerException)
     async def custom_exception_handler(

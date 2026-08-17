@@ -9,6 +9,7 @@ from app.core.context import correlation_id_ctx
 from app.core.logging import logger
 from app.exceptions.handlers import register_exception_handlers
 from app.services.analysis_service import generate_correlation_id
+from app.core.limiter import limiter
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -18,6 +19,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+app.state.limiter = limiter
 
 # Set up CORS
 app.add_middleware(

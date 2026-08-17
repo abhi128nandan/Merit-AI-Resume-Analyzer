@@ -1,6 +1,8 @@
 import io
 import os
 
+import pytest
+from app.core.config import settings
 from docx import Document
 from fastapi.testclient import TestClient
 
@@ -9,6 +11,7 @@ from app.main import app
 client = TestClient(app)
 
 
+@pytest.mark.skipif(not settings.GROQ_API_KEY, reason="GROQ_API_KEY is not set")
 def test_e2e_analyze_flow():
     """End-to-end integration test for full ATS resume analysis API."""
     doc = Document()

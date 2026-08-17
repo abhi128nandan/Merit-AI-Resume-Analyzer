@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile, Depends
+from fastapi import APIRouter, File, HTTPException, UploadFile, Depends, Request
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +8,7 @@ from app.schemas.analysis import AnalysisResponse
 from app.services.analysis_service import execute_analysis_workflow
 from app.validators.file_validator import validate_uploaded_file
 from app.api.v1.endpoints import auth, history
+from app.core.limiter import limiter
 from app.core.database import get_db
 from app.api.deps import get_optional_current_user
 from app.models.user import User
@@ -26,7 +27,9 @@ api_v1_router.include_router(history.router, prefix="/history", tags=["history"]
     description="Uploads a resume (PDF/DOCX) and job description (PDF/DOCX/TXT), orchestrates the AI parsing pipelines concurrently, runs the ATS matching engine, and returns a comprehensive structured report.",
     status_code=200,
 )
+@limiter.limit("10/hour")
 async def analyze_documents(
+    request: Request,
     resume: UploadFile = File(..., description="The candidate's resume (PDF/DOCX)"),
     jd: UploadFile = File(..., description="The target Job Description (PDF/DOCX/TXT)"),
     db: AsyncSession = Depends(get_db),
