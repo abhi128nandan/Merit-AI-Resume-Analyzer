@@ -108,7 +108,7 @@ def extract_text(file_content: bytes, extension: str) -> str:
     """
     if extension.lower() == ".pdf":
         return extract_text_from_pdf(file_content)
-    elif extension.lower() == ".docx":
+    elif extension.lower() in [".docx", ".doc"]:
         return extract_text_from_docx(file_content)
     elif extension.lower() == ".txt":
         return file_content.decode("utf-8", errors="ignore").strip()

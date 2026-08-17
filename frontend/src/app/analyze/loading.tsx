@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, FileSearch, Zap, LineChart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -58,29 +57,23 @@ export default function LoadingState() {
               return (
                 <div key={step.id} className="flex items-center gap-4">
                   <div className="relative">
-                    <AnimatePresence mode="popLayout">
                       {isPast ? (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="w-8 h-8 bg-emerald-500/15 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400"
+                        <div
+                          className="w-8 h-8 bg-emerald-500/15 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 animate-in zoom-in duration-300"
                         >
                           <CheckCircle2 className="w-4 h-4" />
-                        </motion.div>
+                        </div>
                       ) : isActive ? (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="w-8 h-8 bg-primary/15 rounded-full flex items-center justify-center text-primary"
+                        <div
+                          className="w-8 h-8 bg-primary/15 rounded-full flex items-center justify-center text-primary animate-in zoom-in duration-300"
                         >
                           <Loader2 className="w-4 h-4 animate-spin" />
-                        </motion.div>
+                        </div>
                       ) : (
                         <div className="w-8 h-8 rounded-full border-2 border-muted flex items-center justify-center">
                           <Icon className="w-4 h-4 text-muted-foreground" />
                         </div>
                       )}
-                    </AnimatePresence>
                   </div>
                   <span
                     className={`text-sm font-medium transition-colors ${

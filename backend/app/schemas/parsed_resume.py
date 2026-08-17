@@ -30,19 +30,11 @@ class LLMExtractedEducation(BaseModel):
     )
     institution: str = Field("Not Specified", description="University or college name")
     graduation_year: str = Field("", description="Year of graduation (e.g., '2021')")
-    coursework: List[str] = Field(
-        default_factory=list, description="List of relevant coursework or subjects studied"
-    )
 
     @field_validator("degree", "institution", "graduation_year", mode="before")
     @classmethod
     def sanitize_strings(cls, v: Optional[str]) -> str:
         return "" if v is None else str(v).strip()
-
-    @field_validator("coursework", mode="before")
-    @classmethod
-    def sanitize_coursework(cls, v: Optional[List[str]]) -> List[str]:
-        return [] if v is None else [str(x) for x in v if x is not None]
 
 
 class LLMExtractedContact(BaseModel):
@@ -96,7 +88,6 @@ class VerifiedEducation(BaseModel):
     degree: VerifiedField
     institution: VerifiedField
     graduation_year: VerifiedField
-    coursework: List[VerifiedField]
 
 
 class VerifiedContact(BaseModel):

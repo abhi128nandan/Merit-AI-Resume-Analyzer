@@ -28,9 +28,6 @@ class MatchCategoryResult(BaseModel):
     evidence: List[EvidenceResult] = Field(
         ..., description="The collected evidence justifying the score"
     )
-    applied_weight: float = Field(
-        0.0, description="The actual policy weight applied (0.0 if not applicable)"
-    )
 
 
 class MatchReport(BaseModel):

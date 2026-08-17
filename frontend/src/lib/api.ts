@@ -97,6 +97,7 @@ export async function analyzeMatch(resumeFile: File, jdText: string): Promise<An
       method: "POST",
       body: formData,
       // Note: Do NOT set Content-Type header when using FormData. The browser will set it automatically with the boundary.
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -134,5 +135,109 @@ export async function analyzeMatch(resumeFile: File, jdText: string): Promise<An
     }
     // Handle network errors (e.g. CORS failure, backend down)
     throw new ApiError(0, "Failed to connect to the analysis server. Please check your connection or try again later.");
+  }
+}
+
+// --- Auth Endpoints ---
+
+export async function login(email: string, password: string) {
+  const formData = new URLSearchParams();
+  formData.append("username", email);
+  formData.append("password", password);
+
+  const response = await fetch(`${API_BASE_URL}/auth/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData.toString(),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(response.status, errorData.detail || "Invalid email or password");
+  }
+  return response.json();
+}
+
+export async function register(email: string, password: string) {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new ApiError(response.status, errorData.detail || "Registration failed");
+  }
+  return response.json();
+}
+
+export async function logout() {
+  const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "Logout failed");
+  }
+  return response.json();
+}
+
+export async function getMe() {
+  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "Not authenticated");
+  }
+  return response.json();
+}
+
+// --- History Endpoints ---
+
+export interface HistoryItem {
+  id: string;
+  resume_filename: string;
+  jd_filename: string;
+  overall_score: number;
+  created_at: string;
+}
+
+export async function getHistory(): Promise<HistoryItem[]> {
+  const response = await fetch(`${API_BASE_URL}/history/`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "Failed to fetch history");
+  }
+  return response.json();
+}
+
+export async function getAnalysis(id: string): Promise<AnalysisResponse> {
+  const response = await fetch(`${API_BASE_URL}/history/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "Failed to fetch analysis");
+  }
+  return response.json();
+}
+
+export async function deleteAnalysis(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/history/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, "Failed to delete analysis");
   }
 }

@@ -1,9 +1,7 @@
 import json
 import os
-from typing import Dict, List, Set
-
+from typing import List, Dict, Set
 from app.matching.normalizer import normalize_term
-
 
 class ConceptProvider:
     def __init__(self, filepath: str):
@@ -12,23 +10,19 @@ class ConceptProvider:
         self.alias_to_concept: Dict[str, Set[str]] = {}
         self.tech_to_concept: Dict[str, Set[str]] = {}
         self.course_to_concept: Dict[str, Set[str]] = {}
-
+        
         if os.path.exists(filepath):
             with open(filepath, "r", encoding="utf-8") as f:
                 raw_data = json.load(f)
-
+                
             for concept, data in raw_data.items():
                 norm_concept = normalize_term(concept)
                 self.concepts[norm_concept] = {
                     "aliases": [normalize_term(a) for a in data.get("aliases", [])],
-                    "technologies": [
-                        normalize_term(t) for t in data.get("technologies", [])
-                    ],
-                    "coursework": [
-                        normalize_term(c) for c in data.get("coursework", [])
-                    ],
+                    "technologies": [normalize_term(t) for t in data.get("technologies", [])],
+                    "coursework": [normalize_term(c) for c in data.get("coursework", [])]
                 }
-
+                
                 # Build reverse mappings
                 for a in self.concepts[norm_concept]["aliases"]:
                     self.alias_to_concept.setdefault(a, set()).add(norm_concept)
@@ -41,17 +35,17 @@ class ConceptProvider:
         """Returns all known aliases for a term, including the term itself."""
         norm_term = normalize_term(term)
         aliases = {norm_term}
-
+        
         # If the term is a root concept
         if norm_term in self.concepts:
             aliases.update(self.concepts[norm_term]["aliases"])
-
+            
         # If the term is an alias, get its root concepts and their aliases
         if norm_term in self.alias_to_concept:
             for root_concept in self.alias_to_concept[norm_term]:
                 aliases.add(root_concept)
                 aliases.update(self.concepts[root_concept]["aliases"])
-
+                
         return aliases
 
     def get_concepts_for_technology(self, tech_term: str) -> Set[str]:
@@ -77,9 +71,6 @@ class ConceptProvider:
                 concepts.update(mapped_concepts)
         return concepts
 
-
 # Singleton
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-concept_provider = ConceptProvider(
-    os.path.join(BASE_DIR, "data", "concepts", "v1.json")
-)
+concept_provider = ConceptProvider(os.path.join(BASE_DIR, "data", "concepts", "v1.json"))

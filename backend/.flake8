@@ -7,5 +7,4 @@ exclude =
     venv,
     .venv,
     build,
-    dist,
-    alembic_pg
+    dist
