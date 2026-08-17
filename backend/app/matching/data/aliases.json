@@ -1,0 +1,12 @@
+{
+  "rest api": ["web services", "web api", "http services", "restful api", "rest apis"],
+  "postgresql": ["database", "databases", "rdbms", "sql database", "postgres"],
+  "spring boot": ["backend", "web services", "java backend", "spring"],
+  "express.js": ["backend", "web services", "node backend", "express"],
+  "oop": ["object oriented programming", "object-oriented programming"],
+  "dbms": ["database", "databases", "rdbms"],
+  "ci/cd": ["github actions", "jenkins", "gitlab ci", "continuous integration", "continuous deployment"],
+  "nodejs": ["node.js", "node js", "node"],
+  "reactjs": ["react.js", "react js", "react"],
+  "nextjs": ["next.js", "next js", "next"]
+}

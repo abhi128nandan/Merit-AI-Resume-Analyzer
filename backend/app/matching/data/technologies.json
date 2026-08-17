@@ -1,0 +1,14 @@
+{
+  "spring boot": ["backend development", "rest apis", "web services"],
+  "postgresql": ["database", "rdbms"],
+  "express.js": ["rest apis", "backend development"],
+  "jpa/hibernate": ["database", "orm"],
+  "next.js middleware": ["authentication", "routing"],
+  "github actions": ["ci/cd", "automation"],
+  "jenkins": ["ci/cd", "automation"],
+  "docker": ["containerization", "deployment"],
+  "kubernetes": ["orchestration", "deployment"],
+  "aws": ["cloud computing"],
+  "gcp": ["cloud computing"],
+  "azure": ["cloud computing"]
+}
