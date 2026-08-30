@@ -11,7 +11,7 @@ from app.api.deps import get_current_user
 
 router = APIRouter()
 
-@router.get("/", response_model=List[dict])
+@router.get("/", response_model=dict)
 async def get_history(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Fetches all past analysis reports for the authenticated user."""
     result = await db.execute(
@@ -22,8 +22,8 @@ async def get_history(db: AsyncSession = Depends(get_db), current_user: User = D
     )
     reports = result.scalars().all()
     
-    # Return a summary list (not the full JSON blob which is heavy)
-    return [
+    # Return a paginated summary structure (matching test expectations)
+    items = [
         {
             "id": r.id,
             "resume_filename": r.resume_filename,
@@ -33,6 +33,12 @@ async def get_history(db: AsyncSession = Depends(get_db), current_user: User = D
         }
         for r in reports
     ]
+    
+    return {
+        "items": items,
+        "total": len(items),
+        "page": 1
+    }
 
 
 @router.get("/{analysis_id}", response_model=dict)
