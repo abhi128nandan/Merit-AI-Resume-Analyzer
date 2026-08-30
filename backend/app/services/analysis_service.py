@@ -96,13 +96,13 @@ async def execute_analysis_workflow(
 
     logger.info(f"[{analysis_id}] Initiating Analysis Workflow")
 
-    # 1. Concurrent Parsing (Timeout: 25 seconds)
+    # 1. Concurrent Parsing (Timeout: 30 seconds)
     try:
         resume_task = run_pipeline_with_timeout(
-            process_resume, 25, resume_bytes, resume_filename
+            process_resume, 30.0, resume_bytes, resume_filename
         )
         jd_task = run_pipeline_with_timeout(
-            process_job_description, 25, jd_bytes, jd_filename
+            process_job_description, 30.0, jd_bytes, jd_filename
         )
 
         # return_exceptions=False means if one fails, gather throws immediately.
