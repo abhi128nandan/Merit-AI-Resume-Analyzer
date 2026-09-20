@@ -5,7 +5,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base, get_db
 from app.main import app
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_auth.db"
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 engine = create_async_engine(TEST_DATABASE_URL, echo=False, poolclass=StaticPool, connect_args={'check_same_thread': False})
 TestingSessionLocal = async_sessionmaker(
@@ -13,15 +13,21 @@ TestingSessionLocal = async_sessionmaker(
 )
 
 
-async def override_get_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    async with TestingSessionLocal() as session:
-        yield session
-        await session.rollback()
+import pytest
 
+@pytest.fixture(autouse=True)
+def override_db_fixture():
+    async def override_get_db():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        async with TestingSessionLocal() as session:
+            yield session
+            await session.rollback()
+            
+    app.dependency_overrides[get_db] = override_get_db
+    yield
+    app.dependency_overrides.clear()
 
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 

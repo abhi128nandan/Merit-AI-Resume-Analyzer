@@ -12,15 +12,21 @@ TestingSessionLocal = async_sessionmaker(
 )
 
 
-async def override_get_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    async with TestingSessionLocal() as session:
-        yield session
-        await session.rollback()
+import pytest
 
+@pytest.fixture(autouse=True)
+def override_db_fixture():
+    async def override_get_db():
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        async with TestingSessionLocal() as session:
+            yield session
+            await session.rollback()
+            
+    app.dependency_overrides[get_db] = override_get_db
+    yield
+    app.dependency_overrides.clear()
 
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
