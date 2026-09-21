@@ -1,0 +1,54 @@
+{
+  "overall_score": 63,
+  "skills_evaluation": {
+    "score": 66,
+    "evidence": [
+      {
+        "requirement": "JavaScript",
+        "match_level": "Exact",
+        "evidence_found": "JavaScript [Type: Verified, Conf: High]"
+      },
+      {
+        "requirement": "React",
+        "match_level": "Exact",
+        "evidence_found": "React [Type: Verified, Conf: High]"
+      },
+      {
+        "requirement": "CSS",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "experience_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "1 year",
+        "match_level": "Exact",
+        "evidence_found": "Frontend Developer (4.6 yrs), Store Manager (6.9 yrs) [Type: Experience Calculation, Conf: High]"
+      }
+    ]
+  },
+  "education_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Not Specified",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "title_evaluation": {
+    "score": 50,
+    "evidence": [
+      {
+        "requirement": "Junior Frontend Developer",
+        "match_level": "Partial",
+        "evidence_found": "Frontend Developer [Type: Partial, Conf: Medium]"
+      }
+    ]
+  },
+  "confidence_warning": true
+}

@@ -1,0 +1,59 @@
+{
+  "overall_score": 85,
+  "skills_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "Go",
+        "match_level": "Exact",
+        "evidence_found": "Go [Type: Verified, Conf: High]"
+      },
+      {
+        "requirement": "AWS",
+        "match_level": "Exact",
+        "evidence_found": "AWS [Type: Verified, Conf: High]"
+      },
+      {
+        "requirement": "System Design",
+        "match_level": "Exact",
+        "evidence_found": "System Design [Type: Verified, Conf: High]"
+      },
+      {
+        "requirement": "Kubernetes",
+        "match_level": "Exact",
+        "evidence_found": "Kubernetes [Type: Verified, Conf: High]"
+      }
+    ]
+  },
+  "experience_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "5+ years",
+        "match_level": "Exact",
+        "evidence_found": "Senior Backend Engineer (8.6 yrs), Software Engineer (2.9 yrs) [Type: Experience Calculation, Conf: High]"
+      }
+    ]
+  },
+  "education_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Bachelor's degree",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "title_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "Senior Backend Engineer",
+        "match_level": "Exact",
+        "evidence_found": "Senior Backend Engineer [Type: Semantic, Conf: High]"
+      }
+    ]
+  },
+  "confidence_warning": true
+}

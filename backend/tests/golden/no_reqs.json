@@ -1,0 +1,49 @@
+{
+  "overall_score": 70,
+  "skills_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "HTML",
+        "match_level": "Exact",
+        "evidence_found": "HTML [Type: Verified, Conf: High]"
+      },
+      {
+        "requirement": "CSS",
+        "match_level": "Exact",
+        "evidence_found": "CSS [Type: Verified, Conf: High]"
+      }
+    ]
+  },
+  "experience_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "Not Specified",
+        "match_level": "Exact",
+        "evidence_found": null
+      }
+    ]
+  },
+  "education_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Not Specified",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "title_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Trainee",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "confidence_warning": true
+}

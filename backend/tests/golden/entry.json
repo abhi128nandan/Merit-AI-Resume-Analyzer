@@ -1,0 +1,44 @@
+{
+  "overall_score": 70,
+  "skills_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "Java",
+        "match_level": "Exact",
+        "evidence_found": "Java [Type: Verified, Conf: High]"
+      }
+    ]
+  },
+  "experience_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "0-1 years",
+        "match_level": "Exact",
+        "evidence_found": "Intern (0.3 yrs) [Type: Experience Calculation, Conf: High]"
+      }
+    ]
+  },
+  "education_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Bachelor's degree in Computer Science",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "title_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Entry Level Dev",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "confidence_warning": true
+}

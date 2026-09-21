@@ -1,0 +1,49 @@
+{
+  "overall_score": 70,
+  "skills_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "Python",
+        "match_level": "Exact",
+        "evidence_found": "Python [Type: Verified, Conf: High]"
+      },
+      {
+        "requirement": "SQL",
+        "match_level": "Exact",
+        "evidence_found": "SQL [Type: Verified, Conf: High]"
+      }
+    ]
+  },
+  "experience_evaluation": {
+    "score": 100,
+    "evidence": [
+      {
+        "requirement": "0-1 years",
+        "match_level": "Exact",
+        "evidence_found": "Software Intern (0.4 yrs) [Type: Experience Calculation, Conf: High]"
+      }
+    ]
+  },
+  "education_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Bachelor's degree in Computer Science",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "title_evaluation": {
+    "score": 0,
+    "evidence": [
+      {
+        "requirement": "Junior Software Engineer",
+        "match_level": "Missing",
+        "evidence_found": null
+      }
+    ]
+  },
+  "confidence_warning": true
+}
